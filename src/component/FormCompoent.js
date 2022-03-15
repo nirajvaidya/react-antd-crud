@@ -1,120 +1,128 @@
-import React, { useRef } from "react";
-import { Form, Input, InputNumber, Button, Select } from "antd";
-import { postData } from "../api/BaseApi";
-import { toast } from "react-toastify";
-const { Option } = Select;
-const layout = {
-  labelCol: {
-    span: 8,
-  },
-  wrapperCol: {
-    span: 16,
-  },
+import React, { useState } from "react";
+import { useEffect } from "react";
+const initialFormState = {
+  id: null,
+  firstname: "",
+  lastname: "",
+  email: "",
+  age: "",
+  gender: "male",
+  description: "",
 };
 
-const validateMessages = {
-  required: "${label} is required!",
-  types: {
-    email: "${label} is not a valid email!",
-    number: "${label} is not a valid number!",
-  },
-  number: {
-    range: "${label} must be between ${min} and ${max}",
-  },
-};
+const FormComponent = ({ handleAddUser, editable, isEdit, updateUser, setIsEdit, setEditable }) => {
+  const [user, setUser] = useState({});
 
-const FormComponent = ({ setUserData, userData, editable }) => {
-  const fromRef = useRef();
-  const onFinish = (values) => {
-    postData("userTable", values.user).then((response) => {
-      setUserData([...userData, response.data]);
-      toast.success("You have added successfully.");
-      fromRef.current.resetFields();
-    });
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setUser({ ...user, [name]: value });
   };
 
-  return (
-    <Form
-      {...layout}
-      name="nest-messages"
-      onFinish={onFinish}
-      validateMessages={validateMessages}
-      initialValues={{ user: editable }}
-      ref={fromRef}
-    >
-      <Form.Item
-        name={["user", "firstname"]}
-        shouldUpdate={(prevValues, curValues) => {
-          console.log({ prevValues });
-          return prevValues.user.firstname !== curValues.user.firstname;
-        }}
-        label="First name"
-        rules={[
-          {
-            required: true,
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        name={["user", "lastname"]}
-        label="Last name"
-        rules={[
-          {
-            required: true,
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        name={["user", "email"]}
-        label="Email"
-        rules={[
-          {
-            required: true,
-            type: "email",
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        name={["user", "age"]}
-        label="Age"
-        rules={[
-          {
-            required: true,
+  useEffect(() => {
+    setUser(editable)
+  }, [editable])
 
-            type: "number",
-            min: 0,
-            max: 99,
-          },
-        ]}
-      >
-        <InputNumber style={{ width: "100%" }} />
-      </Form.Item>
-      <Form.Item
-        name={["user", "gender"]}
-        label="Gender"
-        rules={[{ required: true, message: "Please select gender!" }]}
-      >
-        <Select placeholder="select your gender">
-          <Option value="male">Male</Option>
-          <Option value="female">Female</Option>
-          <Option value="other">Other</Option>
-        </Select>
-      </Form.Item>
-      <Form.Item name={["user", "discription"]} label="Discription">
-        <Input.TextArea />
-      </Form.Item>
-      <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
-        <Button type="primary" htmlType="submit">
-          Submit
-        </Button>
-      </Form.Item>
-    </Form>
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (isEdit) {
+      updateUser(editable.id, user)
+    } else {
+      handleAddUser(user);
+    }
+    setUser(initialFormState)
+  }
+
+  return (
+    <form
+      onSubmit={(event) => onSubmit(event)}
+    >
+      <div className="form-group">
+        <div className="input-group">
+          <label>First Name</label>
+          <input
+            type="text"
+            name="firstname"
+            value={user.firstname}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Last Name</label>
+          <input
+            type="text"
+            name="lastname"
+            value={user.lastname}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <div className="input-group">
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={user.email}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="input-group"><label>Age</label>
+          <input
+            type="number"
+            name="age"
+            value={user.age}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+      </div>
+      <div className="input-group" value={user.gender} onChange={handleInputChange}>
+        <label>Gender</label>
+        <div>
+          <label>Male</label>
+          <input
+            type="radio"
+            value="male"
+            name="gender"
+            checked={user.gender === 'male'}
+            required
+          />
+        </div>
+        <div>
+          <label>Female</label>
+          <input
+            type="radio"
+            value="female"
+            name="gender"
+            defaultValue={user.gender}
+            checked={user.gender === 'female'}
+            required
+          />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Description</label>
+        <textarea
+          type="text"
+          name="description"
+          value={user.description}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="submit-buuton">
+        <button> {isEdit ? `Update user` : `Add user`}</button>
+        {
+          isEdit && <button onClick={() => {
+            setEditable(initialFormState)
+            setIsEdit(false)
+          }}>Clear</button>
+        }
+      </div>
+    </form>
   );
 };
 

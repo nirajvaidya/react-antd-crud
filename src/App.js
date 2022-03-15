@@ -1,74 +1,76 @@
-import TableComponet from "./component/TableComponent";
+import React, { useState } from "react";
 import FormComponent from "./component/FormCompoent";
+import TableComponet from "./component/TableComponent";
 import "./App.css";
-import "antd/dist/antd.variable.min.css";
-import { useState, useEffect } from "react";
-import { deletData, getData } from "./api/BaseApi";
-import FormCompoentEdit from "./component/FormCompoentEdit";
-import Header from "./component/Header";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Divider } from "antd";
 
-function App() {
-  const [userData, setUserData] = useState([]);
-  const [editable, setEditable] = useState({});
+const initialFormState = {
+  id: null,
+  firstname: "",
+  lastname: "",
+  email: "",
+  age: "",
+  gender: "male",
+  description: "",
+};
 
-  const handleDelete = (id) => {
-    deletData(`userTable/${id}`).then((response) => {
-      const newUserData = [...userData];
-      setUserData([...newUserData.filter((item) => item.id !== id)]);
-      toast.success("You have deleted successfully.");
-      setEditable({});
-    });
+const usersData = [
+  {
+    id: 1,
+    firstname: "Niraj",
+    lastname: "Vaidya",
+    email: "nirajkumarv19997@gmail.com",
+    age: 23,
+    gender: "male",
+    description: "I am react js developer",
+  },
+];
+const App = () => {
+  const [users, setUsers] = useState(usersData);
+  const [editable, setEditable] = useState(initialFormState);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const handleAddUser = (user) => {
+    user.id = users.length + 1;
+    setUsers([...users, user]);
+    setEditable(initialFormState);
   };
 
-  useEffect(() => {
-    getData("userTable").then((response) => {
-      setUserData(response.data);
-    });
-  }, []);
+  const deleteUser = (id) => {
+    setEditable({});
+    setUsers(users.filter((user) => user.id !== id));
+  };
+
+  const updateUser = (id, updatedUser) => {
+    setUsers(users.map((user) => (user.id === id ? updatedUser : user)));
+    setIsEdit(false);
+    setEditable(initialFormState);
+  };
+
+  const handleEdit = (user) => {
+    setIsEdit(true);
+    setEditable(user);
+  };
+
   return (
     <div className="App">
-      <Header />
-      <div className="p-4 form-component">
-        {Object.keys(editable).length ? (
-          <FormCompoentEdit
-            setUserData={setUserData}
-            userData={userData}
-            setEditable={setEditable}
-            editable={editable}
-          />
-        ) : (
-          <FormComponent
-            setUserData={setUserData}
-            userData={userData}
-            setEditable={setEditable}
-            editable={editable}
-          />
-        )}
-      </div>
-      <Divider>Form Records</Divider>
-      <TableComponet
-        setUserData={setUserData}
-        userData={userData}
-        setEditable={setEditable}
+      <h1>Woyce CRUD Assignment (React Js)</h1>
+      <FormComponent
+        handleAddUser={handleAddUser}
         editable={editable}
-        handleDelete={handleDelete}
+        updateUser={updateUser}
+        isEdit={isEdit}
+        setEditable={setEditable}
+        setIsEdit={setIsEdit}
       />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
+      <hr />
+      <h3>Users Records</h3>
+      <TableComponet
+        users={users}
+        deleteUser={deleteUser}
+        handleEdit={handleEdit}
       />
     </div>
   );
-}
+};
 
 export default App;
